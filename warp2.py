@@ -108,6 +108,10 @@ class DbusWarp2Service:
         config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
         return config
 
+    def _handlechangedvalue(self, path, value):
+        logging.debug("someone else updated %s to %s" % (path, value))
+        return True # accept the change
+        
 def getLogLevel():
     config = configparser.ConfigParser()
     config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
