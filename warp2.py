@@ -25,23 +25,6 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 class DbusWarp2Service:
-    def _on_message(ws, message):
-        print(message)
-
-    def _on_error(ws, error):
-        print(error)
-
-    def _on_close(ws, close_status_code, close_msg):
-        print("### closed ###")
-
-    def _on_open(ws):
-        print("Opened connection")
-
-    def _getConfig(self):
-        config = configparser.ConfigParser()
-        config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
-        return config;
-
     def __init__(self, servicename, paths, productname='WARP2 Smart', connection='WARP2 Smart HTTP service'):
         config = self._getConfig()
         deviceinstance = int(config['DEFAULT']['Deviceinstance'])
@@ -59,15 +42,15 @@ class DbusWarp2Service:
         #get data from go-eCharger
         #data = self._getGoeChargerData()
         websocket.enableTrace(True)
-        ws = websocket.WebSocketApp("ws://" + config['ONPREMISE']['Host'] + "/ws",
-                                on_open = _on_open,
-                                on_message = _on_message,
-                                on_error = _on_error,
-                                on_close = _on_close)
+        #ws = websocket.WebSocketApp("ws://" + config['ONPREMISE']['Host'] + "/ws",
+        #                        on_open = _on_open,
+        #                        on_message = _on_message,
+        #                        on_error = _on_error,
+        #                        on_close = _on_close)
 
-        ws.run_forever(dispatcher=rel, reconnect=5)
-        rel.signal(2, rel.abort)  # Keyboard Interrupt
-        rel.dispatch()
+        #ws.run_forever(dispatcher=rel, reconnect=5)
+        #rel.signal(2, rel.abort)  # Keyboard Interrupt
+        #rel.dispatch()
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -106,6 +89,22 @@ class DbusWarp2Service:
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
 
+    def _on_message(ws, message):
+        print(message)
+
+    def _on_error(ws, error):
+        print(error)
+
+    def _on_close(ws, close_status_code, close_msg):
+        print("### closed ###")
+
+    def _on_open(ws):
+        print("Opened connection")
+
+    def _getConfig(self):
+        config = configparser.ConfigParser()
+        config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+        return config
 
 def getLogLevel():
     config = configparser.ConfigParser()
