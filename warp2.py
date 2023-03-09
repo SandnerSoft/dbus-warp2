@@ -62,7 +62,6 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/UpdateIndex', 0)
         
         self._dbusservice.add_path('/Position', position)
-        self._dbusservice.add_path('/Mode', 0)
 
         # add paths without units
         for path in paths_wo_unit:
