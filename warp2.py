@@ -62,9 +62,11 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/ProductId', 0xFFFF) # 
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', productname)    
-        self._dbusservice.add_path('/FirmwareVersion', int(data['fwv'].replace('.', '')))
+        self._dbusservice.add_path('/FirmwareVersion', 0.2)
+        #self._dbusservice.add_path('/FirmwareVersion', int(data['fwv'].replace('.', '')))
         self._dbusservice.add_path('/HardwareVersion', 2)
-        self._dbusservice.add_path('/Serial', data['sse'])
+        self._dbusservice.add_path('/Serial', "ABCEDF")
+        #self._dbusservice.add_path('/Serial', data['sse'])
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
         
