@@ -24,16 +24,16 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 class DbusWarp2Service:
-    def on_message(ws, message):
+    def _on_message(ws, message):
         print(message)
 
-    def on_error(ws, error):
+    def _on_error(ws, error):
         print(error)
 
-    def on_close(ws, close_status_code, close_msg):
+    def _on_close(ws, close_status_code, close_msg):
         print("### closed ###")
 
-    def on_open(ws):
+    def _on_open(ws):
         print("Opened connection")
 
     def _getConfig(self):
@@ -59,10 +59,10 @@ class DbusWarp2Service:
         #data = self._getGoeChargerData()
         websocket.enableTrace(True)
         ws = websocket.WebSocketApp("ws://" + config['ONPREMISE']['Host'] + "/ws",
-                                on_open=on_open,
-                                on_message=on_message,
-                                on_error=on_error,
-                                on_close=on_close)
+                                on_open = _on_open,
+                                on_message = _on_message,
+                                on_error = _on_error,
+                                on_close = _on_close)
 
         ws.run_forever(dispatcher=rel, reconnect=5)
 
@@ -164,6 +164,6 @@ def main():
         mainloop.run()
     except Exception as e:
         logging.critical('Error at %s', 'main', exc_info=e)
-        
+
 if __name__ == "__main__":
     main()
