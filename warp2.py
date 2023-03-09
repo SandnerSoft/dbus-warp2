@@ -15,9 +15,9 @@ import time
 import requests 
 import configparser
 
-# für Websocket
 import websocket
 import _thread
+import time
 import rel
 
 # our own packages from victron
@@ -40,18 +40,8 @@ class DbusWarp2Service:
         ]
     
         #get data from go-eCharger
-        #data = self._getGoeChargerData()
-        websocket.enableTrace(True)
-        #ws = websocket.WebSocketApp("ws://" + config['ONPREMISE']['Host'] + "/ws",
-        #                        on_open = _on_open,
-        #                        on_message = _on_message,
-        #                        on_error = _on_error,
-        #                        on_close = _on_close)
-
-        #ws.run_forever(dispatcher=rel, reconnect=5)
-        #rel.signal(2, rel.abort)  # Keyboard Interrupt
-        #rel.dispatch()
-
+        data = self._getFirmwareVersion()
+        
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
         self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Unkown version, and running on Python ' + platform.python_version())
@@ -62,8 +52,8 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/ProductId', 0xFFFF) # 
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', productname)    
-        self._dbusservice.add_path('/FirmwareVersion', 0.2)
-        #self._dbusservice.add_path('/FirmwareVersion', int(data['fwv'].replace('.', '')))
+        #self._dbusservice.add_path('/FirmwareVersion', 0.2)
+        self._dbusservice.add_path('/FirmwareVersion', data['firmware'])
         self._dbusservice.add_path('/HardwareVersion', 2)
         self._dbusservice.add_path('/Serial', "ABCEDF")
         #self._dbusservice.add_path('/Serial', data['sse'])
@@ -91,17 +81,33 @@ class DbusWarp2Service:
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
 
-    def _on_message(ws, message):
-        print(message)
+    def _getWarpFirmwareURL(self):
+        config = self._getConfig()
+        accessType = config['DEFAULT']['AccessType']
+        
+        if accessType == 'OnPremise': 
+            URL = "http://%s/info/version" % (config['ONPREMISE']['Host'])
+        else:
+            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+        
+        return URL
 
-    def _on_error(ws, error):
-        print(error)
-
-    def _on_close(ws, close_status_code, close_msg):
-        print("### closed ###")
-
-    def _on_open(ws):
-        print("Opened connection")
+    def _getFirmwareVersion(self):
+        URL = _getWarpFirmwareURL()
+        request_data = requests.get(url = URL)
+    
+        # check for response
+        if not request_data:
+            raise ConnectionError("No response from WARP2 - %s" % (URL))
+        
+        json_data = request_data.json()     
+        
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
+        
+        
+        return json_data
 
     def _getConfig(self):
         config = configparser.ConfigParser()
@@ -127,7 +133,7 @@ class DbusWarp2Service:
         logging.info("Last '/Ac/Power': %s" % (self._dbusservice['/Ac/Power']))
         logging.info("--- End: sign of life ---")
         return True
-        
+
 def getLogLevel():
     config = configparser.ConfigParser()
     config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
