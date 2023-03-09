@@ -18,6 +18,7 @@ import configparser
 # für Websocket
 import websocket
 import _thread
+import rel
 
 # our own packages from victron
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
@@ -65,6 +66,8 @@ class DbusWarp2Service:
                                 on_close = _on_close)
 
         ws.run_forever(dispatcher=rel, reconnect=5)
+        rel.signal(2, rel.abort)  # Keyboard Interrupt
+        rel.dispatch()
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
