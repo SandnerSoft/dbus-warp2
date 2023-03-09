@@ -18,13 +18,29 @@ import configparser
 # für Websocket
 import websocket
 import _thread
-import rel
 
 # our own packages from victron
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
 
 class DbusWarp2Service:
+    def on_message(ws, message):
+        print(message)
+
+    def on_error(ws, error):
+        print(error)
+
+    def on_close(ws, close_status_code, close_msg):
+        print("### closed ###")
+
+    def on_open(ws):
+        print("Opened connection")
+
+    def _getConfig(self):
+        config = configparser.ConfigParser()
+        config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
+        return config;
+
     def __init__(self, servicename, paths, productname='WARP2 Smart', connection='WARP2 Smart HTTP service'):
         config = self._getConfig()
         deviceinstance = int(config['DEFAULT']['Deviceinstance'])
@@ -68,12 +84,12 @@ class DbusWarp2Service:
         
         # add paths without units
         for path in paths_wo_unit:
-        self._dbusservice.add_path(path, None)
+            self._dbusservice.add_path(path, None)
         
         # add path values to dbus
         for path, settings in self._paths.items():
-        self._dbusservice.add_path(
-            path, settings['initial'], gettextcallback=settings['textformat'], writeable=True, onchangecallback=self._handlechangedvalue)
+            self._dbusservice.add_path(
+                path, settings['initial'], gettextcallback=settings['textformat'], writeable=True, onchangecallback=self._handlechangedvalue)
 
         # last update
         self._lastUpdate = 0
@@ -87,23 +103,6 @@ class DbusWarp2Service:
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
 
-
-    def on_message(ws, message):
-        print(message)
-
-    def on_error(ws, error):
-        print(error)
-
-    def on_close(ws, close_status_code, close_msg):
-        print("### closed ###")
-
-    def on_open(ws):
-        print("Opened connection")
-
-    def _getConfig(self):
-        config = configparser.ConfigParser()
-        config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
-        return config;
 
 def getLogLevel():
     config = configparser.ConfigParser()
@@ -162,6 +161,9 @@ def main():
         
         logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
         mainloop = gobject.MainLoop()
-        mainloop.run()            
+        mainloop.run()
+    except Exception as e:
+        logging.critical('Error at %s', 'main', exc_info=e)
+        
 if __name__ == "__main__":
     main()
