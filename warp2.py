@@ -121,6 +121,13 @@ class DbusWarp2Service:
         
         return int(value)
 
+    def _signOfLife(self):
+        logging.info("--- Start: sign of life ---")
+        logging.info("Last _update() call: %s" % (self._lastUpdate))
+        logging.info("Last '/Ac/Power': %s" % (self._dbusservice['/Ac/Power']))
+        logging.info("--- End: sign of life ---")
+        return True
+        
 def getLogLevel():
     config = configparser.ConfigParser()
     config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
