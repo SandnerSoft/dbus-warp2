@@ -39,20 +39,11 @@ class DbusWarp2Service:
         '/Mode'
         ]
     
-        websocket.enableTrace(True)
-        ws = websocket.WebSocketApp("wss://192.168.1.179/ws",
-                                on_open=self.on_open,
-                                on_message=self.on_message,
-                                on_error=self.on_error,
-                                on_close=self.on_close)
-
-        ws.run_forever(dispatcher=rel, reconnect=5)  # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
-        rel.signal(2, rel.abort)  # Keyboard Interrupt
-        rel.dispatch()
-
-        #get data from go-eCharger
-        data = self._getFirmwareVersion()
         
+        #get data from go-eCharger
+        firmware = self._getFirmwareVersion()
+        warp_name = self._getWarp2Name()
+
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
         self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Unkown version, and running on Python ' + platform.python_version())
@@ -63,11 +54,9 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/ProductId', 0xFFFF) # 
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', productname)    
-        #self._dbusservice.add_path('/FirmwareVersion', 0.2)
-        self._dbusservice.add_path('/FirmwareVersion', data['firmware'])
-        self._dbusservice.add_path('/HardwareVersion', 2)
-        self._dbusservice.add_path('/Serial', "ABCEDF")
-        #self._dbusservice.add_path('/Serial', data['sse'])
+        self._dbusservice.add_path('/FirmwareVersion', firmware['firmware'])
+        self._dbusservice.add_path('/HardwareVersion', firmware['config'])
+        self._dbusservice.add_path('/Serial', warp_name['name'])
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
         
@@ -92,31 +81,15 @@ class DbusWarp2Service:
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
 
-    def on_message(ws, message):
-        print(message)
-
-    def on_error(ws, error):
-        print(error)
-
-    def on_close(ws, close_status_code, close_msg):
-        print("### closed ###")
-
-    def on_open(ws):
-        print("Opened connection")
-
-    def _getWarpFirmwareURL(self):
+    def _getWarp2Name(self):
         config = self._getConfig()
         accessType = config['DEFAULT']['AccessType']
         
         if accessType == 'OnPremise': 
-            URL = "http://%s/info/version" % (config['ONPREMISE']['Host'])
+            URL = "http://%s/info/name" % (config['ONPREMISE']['Host'])
         else:
             raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-        
-        return URL
 
-    def _getFirmwareVersion(self):
-        URL = self._getWarpFirmwareURL()
         request_data = requests.get(url = URL)
     
         # check for response
@@ -129,6 +102,28 @@ class DbusWarp2Service:
         if not json_data:
             raise ValueError("Converting response to JSON failed")
         
+        return json_data
+
+    def _getFirmwareVersion(self):
+        config = self._getConfig()
+        accessType = config['DEFAULT']['AccessType']
+        
+        if accessType == 'OnPremise': 
+            URL = "http://%s/info/version" % (config['ONPREMISE']['Host'])
+        else:
+            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+
+        request_data = requests.get(url = URL)
+    
+        # check for response
+        if not request_data:
+            raise ConnectionError("No response from WARP2 - %s" % (URL))
+        
+        json_data = request_data.json()     
+        
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
         
         return json_data
 
