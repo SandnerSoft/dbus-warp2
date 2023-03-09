@@ -43,6 +43,7 @@ class DbusWarp2Service:
         #get data from go-eCharger
         firmware = self._getFirmwareVersion()
         warp_name = self._getWarp2Name()
+        position = config['DEFAULT']['Position']
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -60,9 +61,9 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
         
-        self._dbusservice['/Position'] = config['DEFAULT']['Position']
+        self._dbusservice['/Position'] = position
         self._dbusservice['/Mode'] = 0
-        
+
         # add paths without units
         for path in paths_wo_unit:
             self._dbusservice.add_path(path, None)
