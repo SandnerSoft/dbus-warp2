@@ -60,6 +60,9 @@ class DbusWarp2Service:
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
         
+        self._dbusservice['/Position'] = config['DEFAULT']['Position']
+        self._dbusservice['/Mode'] = 0
+        
         # add paths without units
         for path in paths_wo_unit:
             self._dbusservice.add_path(path, None)
@@ -203,7 +206,9 @@ def main():
                 '/SetCurrent': {'initial': 0, 'textformat': _a},
                 '/MaxCurrent': {'initial': 0, 'textformat': _a},
                 '/MCU/Temperature': {'initial': 0, 'textformat': _degC},
-                '/StartStop': {'initial': 0, 'textformat': lambda p, v: (str(v))}
+                '/StartStop': {'initial': 0, 'textformat': lambda p, v: (str(v))},
+
+                '/Position': {'initial': 0, 'textformat': _s}
                 }
             )
         
