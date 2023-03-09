@@ -93,7 +93,7 @@ class DbusWarp2Service:
         return URL
 
     def _getFirmwareVersion(self):
-        URL = _getWarpFirmwareURL()
+        URL = self._getWarpFirmwareURL()
         request_data = requests.get(url = URL)
     
         # check for response
