@@ -90,8 +90,9 @@ class DbusWarp2Service:
 
             self._dbusservice['/Ac/Voltage'] = 0
             self._dbusservice['/Mode'] = 0  # Manual, no control
-            self._dbusservice['/Position'] = 0
             
+            self._setPosition()
+
             # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
             status = 0
             if int(state['charger_state']) == 0:
@@ -137,6 +138,19 @@ class DbusWarp2Service:
 
         except Exception as e:
             logging.critical('Error at %s', '_update', exc_info=e)
+
+    def _setPosition(self):
+        config = self._getConfig()
+        position = config['DEFAULT']['Position']
+
+        if position == 0:
+            self._dbusservice['/Position'] = 0
+        elif position == 1:
+            self._dbusservice['/Position'] = 1
+        else:
+            raise ValueError("Position %s is not supported" % (config['DEFAULT']['Position']))
+        
+        return true
 
     def _getWarp2Hardware(self):
         config = self._getConfig()
@@ -251,7 +265,7 @@ class DbusWarp2Service:
     def _signOfLife(self):
         logging.info("--- Start: sign of life ---")
         logging.info("Last _update() call: %s" % (self._lastUpdate))
-        logging.info("Last '/Ac/Power': %s" % (self._dbusservice['/Ac/Power']))
+        logging.info("Last Updateinterval: %s" % (self._dbusservice['/UpdateIndex']))
         logging.info("--- End: sign of life ---")
         return True
 
