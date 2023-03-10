@@ -150,7 +150,7 @@ class DbusWarp2Service:
         else:
             raise ValueError("Position %s is not supported" % (config['DEFAULT']['Position']))
         
-        return true
+        return True
 
     def _getWarp2Hardware(self):
         config = self._getConfig()
