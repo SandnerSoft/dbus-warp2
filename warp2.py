@@ -105,19 +105,19 @@ class DbusWarp2Service:
             self._dbusservice['/Status'] = status
 
             max_current = 0
-            if int(state['jumper_configuration']) == 0:
+            if int(hardware['jumper_configuration']) == 0:
                 max_current = 6
-            elif int(state['jumper_configuration']) == 1:
+            elif int(hardware['jumper_configuration']) == 1:
                 max_current = 10
-            elif int(state['jumper_configuration']) == 2:
+            elif int(hardware['jumper_configuration']) == 2:
                 max_current = 13
-            elif int(state['jumper_configuration']) == 3:
+            elif int(hardware['jumper_configuration']) == 3:
                 max_current = 16
-            elif int(state['jumper_configuration']) == 4:
+            elif int(hardware['jumper_configuration']) == 4:
                 max_current = 20
-            elif int(state['jumper_configuration']) == 5:
+            elif int(hardware['jumper_configuration']) == 5:
                 max_current = 25
-            elif int(state['jumper_configuration']) == 6:
+            elif int(hardware['jumper_configuration']) == 6:
                 max_current = 32
             else:
                 max_current = 0
