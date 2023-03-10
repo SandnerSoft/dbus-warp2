@@ -123,6 +123,16 @@ class DbusWarp2Service:
                 max_current = 0
             self._dbusservice['/MaxCurrent'] = max_current
 
+
+            # increment UpdateIndex - to show that new data is available
+            index = self._dbusservice['/UpdateIndex'] + 1  # increment index
+            if index > 255:   # maximum value of the index
+                index = 0       # overflow from 255 to 0
+            self._dbusservice['/UpdateIndex'] = index
+
+            #update lastupdate vars
+            self._lastUpdate = time.time()    
+
         except Exception as e:
             logging.critical('Error at %s', '_update', exc_info=e)
 
