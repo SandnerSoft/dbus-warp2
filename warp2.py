@@ -292,7 +292,7 @@ class DbusWarp2Service:
 
         # check for response
         if not request_data:
-        raise ConnectionError("No response from go-eCharger - %s" % (URL))
+            raise ConnectionError("No response from go-eCharger - %s" % (URL))
         
         json_data = request_data.json()
         
