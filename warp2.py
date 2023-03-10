@@ -85,7 +85,7 @@ class DbusWarp2Service:
 
     def _update(self):
         try:
-            state = _getWarp2State()
+            state = self._getWarp2State()
 
             self._dbusservice['/Ac/Voltage'] = 0
 
