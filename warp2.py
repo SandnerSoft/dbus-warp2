@@ -141,7 +141,7 @@ class DbusWarp2Service:
 
     def _setPosition(self):
         config = self._getConfig()
-        position = config['DEFAULT']['Position']
+        position = int(config['DEFAULT']['Position'])
 
         if position == 0:
             self._dbusservice['/Position'] = 0
