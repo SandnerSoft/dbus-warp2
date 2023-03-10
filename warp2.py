@@ -47,7 +47,7 @@ class DbusWarp2Service:
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
-        self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Unkown version, and running on Python ' + platform.python_version())
+        self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Python ' + platform.python_version())
         self._dbusservice.add_path('/Mgmt/Connection', connection)
         
         # Create the mandatory objects
@@ -78,10 +78,33 @@ class DbusWarp2Service:
         self._chargingTime = 0.0
 
         # add _update function 'timer'
-        #gobject.timeout_add(250, self._update) # pause 250ms before the next request
+        gobject.timeout_add(2000, self._update) # pause 250ms before the next request
         
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
+
+    def _update(self):
+        try:
+            state = _getWarp2State()
+
+            self._dbusservice['/Ac/Voltage'] = 0
+
+            # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
+            status = 0
+            if int(state['charger_state']) == 0:
+                status = 4
+            elif int(state['charger_state']) == 1:
+                status = 4
+            elif int(state['charger_state']) == 2:
+                status = 6
+            elif int(state['charger_state']) == 3:
+                status = 2
+            elif int(state['charger_state']) == 4:
+                status = 7
+            self._dbusservice['/Status'] = status
+
+        except Exception as e:
+            logging.critical('Error at %s', '_update', exc_info=e)
 
     def _getWarp2Name(self):
         config = self._getConfig()
@@ -112,6 +135,29 @@ class DbusWarp2Service:
         
         if accessType == 'OnPremise': 
             URL = "http://%s/info/version" % (config['ONPREMISE']['Host'])
+        else:
+            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+
+        request_data = requests.get(url = URL)
+    
+        # check for response
+        if not request_data:
+            raise ConnectionError("No response from WARP2 - %s" % (URL))
+        
+        json_data = request_data.json()     
+        
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
+        
+        return json_data
+
+    def _getWarp2State(self):
+        config = self._getConfig()
+        accessType = config['DEFAULT']['AccessType']
+        
+        if accessType == 'OnPremise': 
+            URL = "http://%s/evse/state" % (config['ONPREMISE']['Host'])
         else:
             raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
 
