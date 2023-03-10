@@ -89,7 +89,9 @@ class DbusWarp2Service:
             hardware = self._getWarp2Hardware()
 
             self._dbusservice['/Ac/Voltage'] = 0
-
+            self._dbusservice['/Mode'] = 0  # Manual, no control
+            self._dbusservice['/Position'] = 0
+            
             # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
             status = 0
             if int(state['charger_state']) == 0:
