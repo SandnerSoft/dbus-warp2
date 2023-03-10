@@ -139,6 +139,7 @@ class DbusWarp2Service:
 
         except Exception as e:
             logging.critical('Error at %s', '_update', exc_info=e)
+        return True
 
     def _setPosition(self):
         config = self._getConfig()
