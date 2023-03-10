@@ -271,10 +271,6 @@ class DbusWarp2Service:
 
         if path == '/SetCurrent':
             return self._setWarp2Current(value)
-        #elif path == '/StartStop':
-        #    return self._setGoeChargerValue('alw', value)
-        #elif path == '/MaxCurrent':
-        #    return self._setGoeChargerValue('ama', value)
         else:
             logging.info("mapping for evcharger path %s does not exist" % (path))
             return False
