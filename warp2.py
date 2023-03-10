@@ -119,7 +119,7 @@ class DbusWarp2Service:
                 max_current = 25
             elif int(state['jumper_configuration']) == 6:
                 max_current = 32
-            else
+            else:
                 max_current = 0
             self._dbusservice['/MaxCurrent'] = max_current
 
