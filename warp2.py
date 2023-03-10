@@ -85,6 +85,7 @@ class DbusWarp2Service:
 
     def _update(self):
         try:
+            logging.info("--- Update values ---")
             state = self._getWarp2State()
             hardware = self._getWarp2Hardware()
 
