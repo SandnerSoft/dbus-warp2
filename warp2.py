@@ -249,7 +249,11 @@ class DbusWarp2Service:
         config = configparser.ConfigParser()
         config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
         return config
- 
+
+    def _handlechangedvalue(self, path, value):
+        logging.debug("someone else updated %s to %s" % (path, value))
+        return True # accept the change
+    
     def _getSignOfLifeInterval(self):
         config = self._getConfig()
         value = config['DEFAULT']['SignOfLifeLog']
@@ -265,42 +269,6 @@ class DbusWarp2Service:
         logging.info("Last Updateinterval: %s" % (self._dbusservice['/UpdateIndex']))
         logging.info("--- End: sign of life ---")
         return True
-
-    def _handlechangedvalue(self, path, value):
-        logging.debug("someone else updated %s to %s" % (path, value))
-
-        if path == '/SetCurrent':
-            return self._setWarp2Current(value)
-        else:
-            logging.info("mapping for evcharger path %s does not exist" % (path))
-            return False
-
-    def _setWarp2Current(self, value):
-        config = self._getConfig()
-        accessType = config['DEFAULT']['AccessType']
-        
-        if accessType == 'OnPremise': 
-            URL = "http://%s/evse/user_current" % (config['ONPREMISE']['Host'])
-        else:
-            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-
-        request_data = requests.put(URL, data = {value})
-
-        # check for response
-        if not request_data:
-            raise ConnectionError("No response from go-eCharger - %s" % (URL))
-        
-        json_data = request_data.json()
-        
-        # check for Json
-        if not json_data:
-            raise ValueError("Converting response to JSON failed")
-        
-        if json_data['current'] == str(value):
-            return True
-        else:
-            logging.warning("WARP2 parameter %s not set to %s" % (parameter, str(value)))
-            return False
 
 def getLogLevel():
     config = configparser.ConfigParser()
