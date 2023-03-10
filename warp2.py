@@ -279,7 +279,7 @@ class DbusWarp2Service:
             logging.info("mapping for evcharger path %s does not exist" % (path))
             return False
 
-    def _setWarp2Current(self, value)
+    def _setWarp2Current(self, value):
         config = self._getConfig()
         accessType = config['DEFAULT']['AccessType']
         
