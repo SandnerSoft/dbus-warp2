@@ -78,14 +78,13 @@ class DbusWarp2Service:
         self._chargingTime = 0.0
 
         # add _update function 'timer'
-        gobject.timeout_add(2000, self._update) # pause 250ms before the next request
+        gobject.timeout_add(10000, self._update) # pause 250ms before the next request
         
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
 
     def _update(self):
         try:
-            logging.info("--- Update values ---")
             state = self._getWarp2State()
             hardware = self._getWarp2Hardware()
 
@@ -250,11 +249,7 @@ class DbusWarp2Service:
         config = configparser.ConfigParser()
         config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
         return config
-
-    def _handlechangedvalue(self, path, value):
-        logging.debug("someone else updated %s to %s" % (path, value))
-        return True # accept the change
-    
+ 
     def _getSignOfLifeInterval(self):
         config = self._getConfig()
         value = config['DEFAULT']['SignOfLifeLog']
@@ -270,6 +265,46 @@ class DbusWarp2Service:
         logging.info("Last Updateinterval: %s" % (self._dbusservice['/UpdateIndex']))
         logging.info("--- End: sign of life ---")
         return True
+
+    def _handlechangedvalue(self, path, value):
+        logging.debug("someone else updated %s to %s" % (path, value))
+
+        if path == '/SetCurrent':
+            return self._setWarp2Current(value)
+        #elif path == '/StartStop':
+        #    return self._setGoeChargerValue('alw', value)
+        #elif path == '/MaxCurrent':
+        #    return self._setGoeChargerValue('ama', value)
+        else:
+            logging.info("mapping for evcharger path %s does not exist" % (path))
+            return False
+
+    def _setWarp2Current(self, value)
+        config = self._getConfig()
+        accessType = config['DEFAULT']['AccessType']
+        
+        if accessType == 'OnPremise': 
+            URL = "http://%s/evse/user_current" % (config['ONPREMISE']['Host'])
+        else:
+            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+
+        request_data = requests.put(URL, data = {value})
+
+        # check for response
+        if not request_data:
+        raise ConnectionError("No response from go-eCharger - %s" % (URL))
+        
+        json_data = request_data.json()
+        
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
+        
+        if json_data['current'] == str(value):
+            return True
+        else:
+            logging.warning("WARP2 parameter %s not set to %s" % (parameter, str(value)))
+            return False
 
 def getLogLevel():
     config = configparser.ConfigParser()
