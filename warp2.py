@@ -86,13 +86,14 @@ class DbusWarp2Service:
     def _update(self):
         try:
             state = self._getWarp2State()
+            hardware = self._getWarp2Hardware()
 
             self._dbusservice['/Ac/Voltage'] = 0
 
             # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
             status = 0
             if int(state['charger_state']) == 0:
-                status = 4
+                status = 0
             elif int(state['charger_state']) == 1:
                 status = 4
             elif int(state['charger_state']) == 2:
@@ -103,8 +104,50 @@ class DbusWarp2Service:
                 status = 7
             self._dbusservice['/Status'] = status
 
+            max_current = 0
+            if int(state['jumper_configuration']) == 0:
+                max_current = 6
+            elif int(state['jumper_configuration']) == 1:
+                max_current = 10
+            elif int(state['jumper_configuration']) == 2:
+                max_current = 13
+            elif int(state['jumper_configuration']) == 3:
+                max_current = 16
+            elif int(state['jumper_configuration']) == 4:
+                max_current = 20
+            elif int(state['jumper_configuration']) == 5:
+                max_current = 25
+            elif int(state['jumper_configuration']) == 6:
+                max_current = 32
+            else
+                max_current = 0
+            self._dbusservice['/MaxCurrent'] = max_current
+
         except Exception as e:
             logging.critical('Error at %s', '_update', exc_info=e)
+
+    def _getWarp2Hardware(self):
+        config = self._getConfig()
+        accessType = config['DEFAULT']['AccessType']
+        
+        if accessType == 'OnPremise': 
+            URL = "http://%s/evse/hardware_configuration" % (config['ONPREMISE']['Host'])
+        else:
+            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
+
+        request_data = requests.get(url = URL)
+    
+        # check for response
+        if not request_data:
+            raise ConnectionError("No response from WARP2 - %s" % (URL))
+        
+        json_data = request_data.json()     
+        
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
+        
+        return json_data
 
     def _getWarp2Name(self):
         config = self._getConfig()
